@@ -85,49 +85,57 @@ public class CenterController {
 		
 		return "center/center_catalogo_add";
 	}
-	
+	//SE IDENTIFICO UN CODE SMELL DE TIPO LONG METHOD Y SE REFACTORIZO CON EXTRACT METHOD
 	@PostMapping("/catalogo/nuevo")
 	public String nuevoCurso(@Valid @ModelAttribute("courseDTO") CourseDTO courseDTO, BindingResult bindingResult,
-			Model model, RedirectAttributes redirectAttributes) {
-	
-		// Solo usar un @ModelAttribute al vincularlo con un formulario, sino habrá problemas de mapeo
-		
+							 Model model, RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			List<Category> categories = categoryService.findAll();
+			model.addAttribute("categories", categories);
+			return "center/center_catalogo_add";
+		}
+
 		TrainingCenter tc = (TrainingCenter) model.getAttribute("user");
-		
+
 		Course course = modelMapper.map(courseDTO, Course.class);
 		course.setStatus(1);
 		course.setTrainingCenter(tc);
-		
+
 		courseService.save(course);
 		redirectAttributes.addFlashAttribute("notification", "Curso agregado");
-		
+
 		return "redirect:/centro/catalogo";
 	}
-	
+
 	@GetMapping("/catalogo/editar/{id}")
 	public String editarCurso(@PathVariable Integer id, Model model) {
 		Course course = courseService.findById(id).orElse(null);
-		
-		if (course == null) return "redirect:/centro/catalogo";
-		
+
+		if (course == null) {
+			return "redirect:/centro/catalogo";
+		}
+
 		CourseDTO courseDTO = modelMapper.map(course, CourseDTO.class);
-		model.addAttribute("courseDTO", courseDTO);
-		
 		List<Category> categories = categoryService.findAll();
+
+		model.addAttribute("courseDTO", courseDTO);
 		model.addAttribute("categories", categories);
-		
+
 		return "center/center_catalogo_edit";
 	}
-	
+
 	@PostMapping("/catalogo/editar")
-	public String editarCurso(@ModelAttribute("courseDTO") CourseDTO courseDTO, BindingResult bindingResult,
-			RedirectAttributes redirectAttributes) {
+	public String guardarCursoEditado(@ModelAttribute("courseDTO") CourseDTO courseDTO, BindingResult bindingResult,
+									  RedirectAttributes redirectAttributes) {
+		if (bindingResult.hasErrors()) {
+			return "center/center_catalogo_edit";
+		}
 
 		Course course = modelMapper.map(courseDTO, Course.class);
-		
+
 		courseService.save(course);
 		redirectAttributes.addFlashAttribute("notification", "Curso actualizado");
-		
+
 		return "redirect:/centro/catalogo";
 	}
 	
