@@ -53,16 +53,17 @@ public class SecurityServiceImpl implements SecurityService {
 		}
 	}
 
+	//Lo que hacemos es extraer
+	//el metodo para luego
+	//colocar uno que sea mejro y asì evitar el code smell y eviatar que el código sea lento
+
 	@Override
 	public Set<String> getRolesFromUserAuthenticatedUser() {
 		UserPrincipal user = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		
-		Set<String> roles = user.getAuthorities()
-								.stream()
-								.map(GrantedAuthority::getAuthority)
-								.collect(Collectors.toSet());
-		
-		return roles;
+		//metodo cambiado
+		return user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
 	}
+
+
 
 }
