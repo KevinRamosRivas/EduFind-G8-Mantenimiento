@@ -232,42 +232,57 @@ public class AdminController {
 		
 		return "admin/admin_usuarios_add";
 	}
-//Seidentifico un code smell de tipo long method, se procedio a refactorizar el codigo con el metodo extract method
-@PostMapping("/usuarios/nuevo")
-public String nuevoUsuario(@ModelAttribute("userDTO") NewUserDTO dto,
-						   RedirectAttributes redirectAttributes) {
-	if (dto.getRole() == 3) {
-		createTrainingCenter(dto);
-	} else {
-		createPerson(dto);
+
+	@PostMapping("/usuarios/nuevo")
+	public String nuevoUsuario(@ModelAttribute("userDTO") NewUserDTO dto,
+			RedirectAttributes redirectAttributes) {
+		//        DIVISION DE  LA LOGICA ORIGINAL EN DOS METODOS PARA QUE EL METODO nuevoUsuario NO SEA TAN LARGO
+		//        EJEMPLO DE CODE SMELL: LONG METHOD
+//		Autor: Kevin Ramos Rivas
+		if (dto.getRole() == 3) {
+			createTrainingCenter(dto);
+		} else {
+			createPerson(dto);
+		}
+
+		redirectAttributes.addFlashAttribute("notification", "Usuario creado");
+
+		return "redirect:/admin/usuarios";
 	}
-
-	redirectAttributes.addFlashAttribute("notification", "Usuario creado");
-
-	return "redirect:/admin/usuarios";
-}
-
-	private void createTrainingCenter(NewUserDTO dto) {
+// Nuevo metodo para crear un usuario de tipo TrainingCenter
+	public void createTrainingCenter(NewUserDTO dto) {
 		TrainingCenter tc = new TrainingCenter();
-		setCommonUserProperties(tc, dto);
+
+		tc.setUsername(dto.getUsername());
+		tc.setPassword(passwordEncoder.encode(dto.getPassword()));
 		tc.setName(dto.getName());
+		tc.setStatus(dto.getStatus());
 		tc.setRuc(dto.getRuc());
 		tc.setPhone(dto.getPhone());
+
+		Set<Role> roles = new HashSet<>();
+		roles.add(new Role(dto.getRole()));
+
+		tc.setRoles(roles);
+
 		userService.save(tc);
 	}
-
-	private void createPerson(NewUserDTO dto) {
+//	Nuevo metodo para crear un usuario de tipo Person
+	public void createPerson(NewUserDTO dto) {
 		Person person = new Person();
-		setCommonUserProperties(person, dto);
+
+		person.setUsername(dto.getUsername());
+		person.setPassword(passwordEncoder.encode(dto.getPassword()));
+		person.setStatus(dto.getStatus());
 		person.setFirstName(dto.getFirstName());
 		person.setLastName(dto.getLastName());
+
+		Set<Role> roles = new HashSet<>();
+		roles.add(new Role(dto.getRole()));
+
+		person.setRoles(roles);
+
 		userService.save(person);
 	}
 
-	private void setCommonUserProperties(User user, NewUserDTO dto) {
-		user.setUsername(dto.getUsername());
-		user.setPassword(passwordEncoder.encode(dto.getPassword()));
-		user.setStatus(dto.getStatus());
-		user.setRoles(Set.of(new Role(dto.getRole())));
-	}
 }
